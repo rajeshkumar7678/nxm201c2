@@ -1,30 +1,31 @@
 const jwt=require("jsonwebtoken")
-const cookies=require("cookie-parser")
-const { blackmodel } = require("../model/blacklist")
+const {blackmodel}=require("../model/blacklist")
 
-const middleware=async (req,res,next)=>{
+
+const middleware=async(req,res,next)=>{
+
     try {
         let {token,refreshtoken}=req.cookies
-        console.log(token)
-        let istoken=await blackmodel.findOne({token})
-        if(istoken){
-            return res.status(400).send("not authorise")
-        }
-        let decoded=jwt.verify(token,"masai")
-        if(!decoded){
-            return res.status(400).send("not authorise")
-        }
-        req.id=decoded.id
-        req.role=decoded.role
-        console.log(decoded.id,decoded.role)
-        next()
-
-    } catch (error) {
-        res.send(error)
+    let istokenpresent=await blackmodel.findOne({token})
+    if(istokenpresent){
+        return res.status(400).send({msg:"not authorized"})
     }
+let decoded=jwt.verify(token,"masai")
+if(!decoded){
+    return res.status(400).send({msg:"Unauthorized"})
+
 
 }
 
-module.exports={
-    middleware
+let id=decoded.id
+let role=decoded.role
+req.id=id
+res.role=role
+next()
+    } catch (error) {
+        console.log(error)
+    }
 }
+
+
+module.exports={middleware}
